@@ -8,6 +8,7 @@ import morgan from 'morgan';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import bodyParser from 'body-parser';
+import { signUp } from './controllers/authController.js';
 
 /* Configuration */
 const __filename = fileURLToPath(import.meta.url);
@@ -39,7 +40,7 @@ const fileStorage = multer.diskStorage({
 const upload = multer({ storage: fileStorage });
 
 // Routes with file upload
-app.post('/auth/register', upload.single('picture'), register);
+app.post('/auth/register', upload.single('picture'), signUp);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Witaj');
