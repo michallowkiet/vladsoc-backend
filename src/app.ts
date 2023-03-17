@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
@@ -9,6 +9,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import bodyParser from 'body-parser';
 import { signUp } from './controllers/authController.js';
+import authRouter from './routes/authRouter.js';
+import userRouter from './routes/userRouter.js';
+import { verifyToken } from './middleware/authHandler.js';
+import PostRouter from './routes/postRouter.js';
+import { createPost } from './controllers/postController.js';
 
 /* Configuration */
 const __filename = fileURLToPath(import.meta.url);
@@ -40,11 +45,12 @@ const fileStorage = multer.diskStorage({
 const upload = multer({ storage: fileStorage });
 
 // Routes with file upload
-app.post('/auth/register', upload.single('picture'), signUp);
+app.post('/auth/register', upload.single('image'), signUp);
+app.post('/posts', verifyToken, upload.single('image'), createPost);
 
-app.get('/', (req: Request, res: Response) => {
-  res.send('Witaj');
-});
+app.use('/auth', authRouter);
+app.use('/users', verifyToken, userRouter);
+app.use('/posts', verifyToken, PostRouter);
 
 const startServer = async () => {
   try {

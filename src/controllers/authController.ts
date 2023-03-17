@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
-import { ISignUpRequest } from '../types/ICustomRequest.js';
+import { ISignInRequest, ISignUpRequest } from '../types/ICustomRequest.js';
 
 const signUp = async (req: ISignUpRequest, res: Response) => {
   try {
@@ -43,4 +43,34 @@ const signUp = async (req: ISignUpRequest, res: Response) => {
   }
 };
 
-export { signUp };
+const signIn = async (req: ISignInRequest, res: Response) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ msg: 'User does not exist.' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res
+        .status(StatusCodes.UNAUTHORIZED)
+        .json({ msg: 'Invalid credentials.' });
+    }
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+    delete user.password;
+
+    res.status(StatusCodes.OK).json({ user, token });
+  } catch (error) {
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: error.message });
+  }
+};
+
+export { signUp, signIn };
